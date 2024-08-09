@@ -41,6 +41,3 @@ def success():
 @app.route('/cancel')
 def cancel():
     return "Payment canceled."
-
-if __name__ == '__main__':
-    app.run(debug=True)
