@@ -7,7 +7,7 @@ load_dotenv()
 
 # Initialize Flask app and SQLite database
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gamblr.db'  # SQLite database file
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -43,4 +43,4 @@ def cancel():
     return "Payment canceled."
 
 if __name__ == '__main__':
-    app.run(debug=os.getenv('FLASK_ENV') == 'development', port=os.getenv('FLASK_RUN_PORT', 5000))
+    app.run(debug=True)
