@@ -113,8 +113,8 @@ try:
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=f'http://127.0.0.1:5001/success?user_id={user_id}&amount={amount}',
-            cancel_url='https://127.0.0.1:5001/cancel',
+            success_url=f'http://127.0.0.1:5000/success?user_id={user_id}&amount={amount}',
+            cancel_url='https://127.0.0.1:5000/cancel',
         )
         await query.message.reply_text(f"Please complete your payment: {session.url}")
 
