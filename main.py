@@ -4,14 +4,14 @@ from dotenv import load_dotenv
 import stripe
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
-from flask import Flask, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 load_dotenv()
 
 # Flask Setup
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///gamblr.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -110,8 +110,8 @@ async def handle_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'quantity': 1,
         }],
         mode='payment',
-        success_url=f'http://localhost:5000/success?user_id={user_id}&amount={amount}',
-        cancel_url='https://localhost:5000/cancel',
+        success_url = f'https://127.0.0.1:5001/success?user_id={user_id}&amount={amount}',
+        cancel_url = 'https://127.0.0.1:5001/cancel'
     )
     await query.message.reply_text(f"Please complete your payment: {session.url}")
 
