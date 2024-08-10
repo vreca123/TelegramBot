@@ -1,4 +1,3 @@
-import random
 import os
 from dotenv import load_dotenv
 import stripe
@@ -44,7 +43,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Hello, welcome to Gamblr!')
     
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text('Here are some commands you can use:\n/start - Start the bot\n/help - Get help\n/balance - Check your balance\n/bet - Place a bet\n/deposit - Add funds to your account')
+    await update.message.reply_text('Here are some commands you can use:\n/start - Start the bot\n/help - Get help\n/balance - Check your balance\n/bet - Place a bet')
 
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.message.chat.id)
@@ -60,18 +59,6 @@ async def bet_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=InlineKeyboardMarkup([[
             InlineKeyboardButton(
                 text="Open Bet Interface",
-                web_app={"url": "https://vreca123.github.io/TelegramBot/bet.html"}
-            )
-        ]])
-    )
-
-async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Open the web app for deposits
-    await update.message.reply_text(
-        "Opening deposit interface...",
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton(
-                text="Open Deposit Interface",
                 web_app={"url": "https://vreca123.github.io/TelegramBot/index.html"}
             )
         ]])
@@ -99,7 +86,6 @@ if __name__ == '__main__':
     telegram_app.add_handler(CommandHandler('help', help_command))
     telegram_app.add_handler(CommandHandler('balance', balance_command))
     telegram_app.add_handler(CommandHandler('bet', bet_command))
-    telegram_app.add_handler(CommandHandler('deposit', deposit_command))
 
     # messages
     telegram_app.add_handler(MessageHandler(filters.TEXT, handle_message))

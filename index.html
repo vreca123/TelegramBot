@@ -6,28 +6,37 @@
     <title>Gamblr - Dashboard</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-        .button { padding: 10px 20px; margin: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .button { padding: 10px 20px; margin: 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
         .button:disabled { background-color: #ccc; }
     </style>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
     <h1>Welcome to Gamblr</h1>
-    <p>Your balance: <span id="balance">0.00€</span></p>
+    <p>Your balance: <span id="balance">Loading...</span></p>
     <button class="button" onclick="deposit()">Deposit</button>
-    <button class="button" onclick="placeBet()">Place Bet</button>
+    <h2>Place Your Bet</h2>
+    <button class="button" onclick="placeBet(20)">Bet 20€</button>
+    <button class="button" onclick="placeBet(40)">Bet 40€</button>
+    <button class="button" onclick="placeBet(100)">Bet 100€</button>
 
     <script>
-        // Telegram Web App Initialization
         const tg = window.Telegram.WebApp;
-        tg.expand();
 
         // Fetch and display user balance
         function fetchBalance() {
-            fetch('https://127.0.0.1:5001/get_balance?user_id=' + tg.initDataUnsafe.user.id)
+            const userId = tg.initDataUnsafe.user.id;
+            fetch('https://127.0.0.1:5001/get_balance?user_id=' + userId)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('balance').innerText = data.balance + '€';
+                    if (data.balance !== undefined) {
+                        document.getElementById('balance').innerText = data.balance + '€';
+                    } else {
+                        document.getElementById('balance').innerText = 'Error fetching balance';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('balance').innerText = 'Error fetching balance';
                 });
         }
 
@@ -46,19 +55,41 @@
             });
         }
 
-        // Bet function
-        function placeBet() {
-            tg.openLink('https://your-github-pages-url/bet.html?user_id=' + tg.initDataUnsafe.user.id);
+        // Function to place a bet
+        function placeBet(amount) {
+            const userId = tg.initDataUnsafe.user.id;
+
+            fetch('https://127.0.0.1:5001/place_bet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    tg.showAlert(`Bet placed! ${data.message}`);
+                    fetchBalance();
+                } else {
+                    tg.showAlert(`Failed to place bet: ${data.message}`);
+                }
+            });
         }
 
         function initiateStripePayment(amount) {
+            const userId = tg.initDataUnsafe.user.id;
+
             fetch('https://127.0.0.1:5001/create_checkout_session', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    user_id: tg.initDataUnsafe.user.id,
+                    user_id: userId,
                     amount: amount
                 })
             })
