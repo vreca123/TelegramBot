@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamblr - Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+        .button { padding: 10px 20px; margin: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .button:disabled { background-color: #ccc; }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <h1>Welcome to Gamblr</h1>
+    <p>Your balance: <span id="balance">0.00€</span></p>
+    <button class="button" onclick="deposit()">Deposit</button>
+    <button class="button" onclick="placeBet()">Place Bet</button>
+
+    <script>
+        // Telegram Web App Initialization
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Fetch and display user balance
+        function fetchBalance() {
+            fetch('https://127.0.0.1:5001/get_balance?user_id=' + tg.initDataUnsafe.user.id)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('balance').innerText = data.balance + '€';
+                });
+        }
+
+        fetchBalance();
+
+        // Deposit function
+        function deposit() {
+            tg.showPopup({
+                title: 'Deposit',
+                message: 'Select the amount to deposit:',
+                buttons: [
+                    { text: '20€', callback: () => initiateStripePayment(20) },
+                    { text: '40€', callback: () => initiateStripePayment(40) },
+                    { text: '100€', callback: () => initiateStripePayment(100) }
+                ]
+            });
+        }
+
+        // Bet function
+        function placeBet() {
+            tg.openLink('https://your-github-pages-url/bet.html?user_id=' + tg.initDataUnsafe.user.id);
+        }
+
+        function initiateStripePayment(amount) {
+            fetch('https://127.0.0.1:5001/create_checkout_session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: tg.initDataUnsafe.user.id,
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                tg.openLink(data.checkout_url);
+            });
+        }
+    </script>
+</body>
+</html>

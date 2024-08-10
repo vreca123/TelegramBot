@@ -54,66 +54,28 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f'Your balance is {balance}€')
 
 async def bet_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("20€", callback_data='bet_20')],
-        [InlineKeyboardButton("40€", callback_data='bet_40')],
-        [InlineKeyboardButton("100€", callback_data='bet_100')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Select an amount to bet:", reply_markup=reply_markup)
+    # Open the web app for bets
+    await update.message.reply_text(
+        "Opening bet interface...",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                text="Open Bet Interface",
+                web_app={"url": "https://vreca123.github.io/TelegramBot/bet.html"}
+            )
+        ]])
+    )
 
 async def deposit_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    keyboard = [
-        [InlineKeyboardButton("20€", callback_data='deposit_20')],
-        [InlineKeyboardButton("40€", callback_data='deposit_40')],
-        [InlineKeyboardButton("100€", callback_data='deposit_100')]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text("Select an amount to deposit:", reply_markup=reply_markup)
-
-# handlers
-async def handle_bet(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    user_id = str(query.message.chat.id)
-    bet_amount = int(query.data.split('_')[1])
-    with app.app_context():
-        user = User.query.filter_by(telegram_id=user_id).first()
-        balance = user.balance if user else 0.0
-        
-        if bet_amount > balance:
-            await query.message.reply_text(f'You cannot bet more than your balance, which currently sits at {balance}')
-            return
-        
-        if random.random() >= 0.5:
-            user.balance -= bet_amount
-            db.session.commit()
-            await query.message.reply_text(f'You have bet {bet_amount}€ and lost. Your new balance is {user.balance}€')
-        else:
-            user.balance += bet_amount
-            db.session.commit()
-            await query.message.reply_text(f'You have bet {bet_amount}€ and won! Your new balance is {user.balance}€')
-
-
-async def handle_deposit(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    user_id = query.message.chat.id
-    amount = int(query.data.split('_')[1])
-
-    session = stripe.checkout.Session.create(
-        payment_method_types=['card'],
-        line_items=[{
-            'price_data': {
-                'currency': 'eur',
-                'product_data': {'name': 'Deposit to Gamblr'},
-                'unit_amount': 100*amount,
-            },
-            'quantity': 1,
-        }],
-        mode='payment',
-        success_url = f'https://127.0.0.1:5001/success?user_id={user_id}&amount={amount}',
-        cancel_url = 'https://127.0.0.1:5001/cancel'
+    # Open the web app for deposits
+    await update.message.reply_text(
+        "Opening deposit interface...",
+        reply_markup=InlineKeyboardMarkup([[
+            InlineKeyboardButton(
+                text="Open Deposit Interface",
+                web_app={"url": "https://vreca123.github.io/TelegramBot/index.html"}
+            )
+        ]])
     )
-    await query.message.reply_text(f"Please complete your payment: {session.url}")
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_type: str = update.message.chat.type
@@ -138,10 +100,6 @@ if __name__ == '__main__':
     telegram_app.add_handler(CommandHandler('balance', balance_command))
     telegram_app.add_handler(CommandHandler('bet', bet_command))
     telegram_app.add_handler(CommandHandler('deposit', deposit_command))
-
-    # callback for inline buttons
-    telegram_app.add_handler(CallbackQueryHandler(handle_bet, pattern='^bet_'))
-    telegram_app.add_handler(CallbackQueryHandler(handle_deposit, pattern='^deposit_'))
 
     # messages
     telegram_app.add_handler(MessageHandler(filters.TEXT, handle_message))
