@@ -29,7 +29,7 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
-@app.route('/success')
+@app.route('/success', methods=['GET'])
 def success():
     user_id = request.args.get('user_id')
     amount = float(request.args.get('amount'))
@@ -37,12 +37,6 @@ def success():
     if not user_id or not amount:
         logger.error('Missing user_id or amount parameter')
         return "Missing user_id or amount parameter.", 400
-
-    try:
-        amount = float(amount)
-    except ValueError:
-        logger.error('Invalid amount parameter')
-        return "Invalid amount parameter.", 400
 
     # Update user balance in the database
     user = User.query.filter_by(telegram_id=user_id).first()
@@ -55,9 +49,9 @@ def success():
         logger.warning(f'User not found: {user_id}')
         return "User not found.", 404
 
-@app.route('/cancel')
+@app.route('/cancel', methods=['GET'])
 def cancel():
     return "Payment canceled."
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
