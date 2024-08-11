@@ -8,7 +8,7 @@ load_dotenv()
 
 # Initialize Flask app
 app = Flask(__name__)
-db = Database('mongodb+srv://timvrecic:fxTj25E7@cluster1.2jux2.mongodb.net/')
+db = Database(os.getenv('DATABASE_URL'))
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 @app.route('/create-payment-intent', methods=['POST'])

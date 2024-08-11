@@ -8,7 +8,7 @@ from model import Database, create_user_schema
 load_dotenv()
 
 # Initialize Database
-db = Database('mongodb+srv://timvrecic:fxTj25E7@cluster1.2jux2.mongodb.net/')
+db = Database(os.getenv('DATABASE_URL'))
 
 # environment variables
 TOKEN = os.getenv('TOKEN')
