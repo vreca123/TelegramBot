@@ -10,7 +10,7 @@ load_dotenv()
 
 # Flask Setup
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:ldShpAErqCnXkuFCeSLszukbVeAKPOZj@monorail.proxy.rlwy.net:12904/railway'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 

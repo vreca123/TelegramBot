@@ -11,7 +11,7 @@ base_url = os.getenv('BASE_URL', '127.0.0.1:5001')
 
 # Initialize Flask app and SQLite database
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:ldShpAErqCnXkuFCeSLszukbVeAKPOZj@monorail.proxy.rlwy.net:12904/railway'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
