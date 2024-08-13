@@ -3,37 +3,53 @@ from dotenv import load_dotenv
 import stripe
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, ContextTypes
-from model import Database, create_user_schema
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 load_dotenv()
 
-# Initialize Database
-db = Database(os.getenv('DATABASE_URL'))
+# Flask Setup
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:ldShpAErqCnXkuFCeSLszukbVeAKPOZj@monorail.proxy.rlwy.net:12904/railway'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    telegram_id = db.Column(db.String(50), unique=True, nullable=False)
+    balance = db.Column(db.Float, default=0.0)
+
+with app.app_context():
+    db.create_all()
 
 # environment variables
 TOKEN = os.getenv('TOKEN')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 BOT_USERNAME = '@best_gamblr_bot'
-stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
-# Commands
+stripe.api_key = STRIPE_SECRET_KEY
+
+# commands
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.message.chat.id)
     
     # Check if the user already exists
-    user = db.find_user_by_telegram_id(user_id)
-    if not user:
-        user = create_user_schema(user_id)
-        db.insert_user(user)
-    
+    with app.app_context():
+        user = User.query.filter_by(telegram_id=user_id).first()
+        if not user:
+            user = User(telegram_id=user_id, balance=0.0)
+            db.session.add(user)
+            db.session.commit()
     await update.message.reply_text('Hello, welcome to Gamblr!')
-
+    
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('Here are some commands you can use:\n/start - Start the bot\n/help - Get help\n/balance - Check your balance\n/bet - Place a bet')
 
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.message.chat.id)
-    user = db.find_user_by_telegram_id(user_id)
-    balance = user['balance'] if user else 0.0
+    with app.app_context():
+        user = User.query.filter_by(telegram_id=user_id).first()
+        balance = user.balance if user else 0.0
     await update.message.reply_text(f'Your balance is {balance}€')
 
 async def bet_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -57,7 +73,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print('Bot:', response)
     await update.message.reply_text(response)
 
-# Logging
+# logging
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f'Update {update} caused error {context.error}')
 
@@ -65,18 +81,18 @@ if __name__ == '__main__':
     print('Running')
     telegram_app = Application.builder().token(TOKEN).build()
 
-    # Commands
+    # commands
     telegram_app.add_handler(CommandHandler('start', start_command))
     telegram_app.add_handler(CommandHandler('help', help_command))
     telegram_app.add_handler(CommandHandler('balance', balance_command))
     telegram_app.add_handler(CommandHandler('bet', bet_command))
 
-    # Messages
+    # messages
     telegram_app.add_handler(MessageHandler(filters.TEXT, handle_message))
 
-    # Errors
+    # errors
     telegram_app.add_error_handler(error)
 
-    # Polling
+    # polling
     print('Polling')
     telegram_app.run_polling(poll_interval=5)
